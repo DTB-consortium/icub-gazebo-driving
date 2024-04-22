@@ -1,0 +1,164 @@
+<application>
+    <name>iCub Gazebo Grasp</name>
+
+    <dependencies>
+    </dependencies>
+
+    <module>
+        <name>gzserver</name>
+        <parameters>-e dart icub-gazebo-grasping-sandbox.sdf</parameters>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>gzclient</name>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--context gazeboCartesianControl --config no_legs.xml</parameters>
+        <dependencies>
+            <port timeout="20">/icubSim/torso/state:o</port>
+            <port timeout="20">/icubSim/left_arm/state:o</port>
+            <port timeout="20">/icubSim/right_arm/state:o</port>
+        </dependencies>
+        <ensure>
+            <wait when="stop">5</wait>
+        </ensure>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>iKinCartesianSolver</name>
+        <parameters>--context gazeboCartesianControl --part right_arm</parameters>
+        <dependencies>
+            <port timeout="20">/icubSim/torso/state:o</port>
+            <port timeout="20">/icubSim/right_arm/state:o</port>
+        </dependencies>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>iKinCartesianSolver</name>
+        <parameters>--context gazeboCartesianControl --part left_arm</parameters>
+        <dependencies>
+            <port timeout="20">/icubSim/torso/state:o</port>
+            <port timeout="20">/icubSim/left_arm/state:o</port>
+        </dependencies>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>iKinGazeCtrl</name>
+        <parameters>--context gazeboCartesianControl --from iKinGazeCtrl.ini</parameters>
+        <dependencies>
+            <port timeout="20">/icubSim/torso/state:o</port>
+            <port timeout="20">/icubSim/head/state:o</port>
+        </dependencies>
+        <ensure>
+            <wait when="stop">5</wait>
+        </ensure>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /view/left --compact --p 10 --x 20 --y 20</parameters>
+        <dependencies>
+            <port timeout="20">/icub-grasp/rpc</port>
+        </dependencies>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>yarpview</name>
+        <parameters>--name /view/right --compact --p 10 --x 20 --y 20</parameters>
+        <dependencies>
+            <port timeout="20">/icub-grasp/rpc</port>
+        </dependencies>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>find-superquadric</name>
+        <parameters>--remove-outliers "(0.01 10)" --random-sample 0.2 --disable-viewer</parameters>
+        <dependencies>
+            <port timeout="20">/icub-grasp/rpc</port>
+        </dependencies>
+        <node>localhost</node>
+    </module>
+
+    <module>
+        <name>icub-gazebo-driving</name>
+        <!-- <environment>YARP_FORWARD_LOG_ENABLE=1</environment> -->
+	<parameters></parameters>
+        <dependencies>
+            <port timeout="20">/iKinGazeCtrl/rpc</port>
+            <port timeout="20">/icubSim/cartesianController/right_arm/state:o</port>
+            <port timeout="20">/icubSim/cartesianController/left_arm/state:o</port>
+        </dependencies>
+        <node>localhost</node>
+    </module>
+
+    <connection>
+        <from>/icub-grasp/mustard_bottle/mover:o</from>
+        <to>/mustard_bottle/model-mover/delta-pose:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <!-- <connection>
+        <from>/icub-grasp/pudding_box/mover:o</from>
+        <to>/pudding_box/model-mover/delta-pose:i</to>
+        <protocol>tcp</protocol>
+    </connection> -->
+
+    <connection>
+        <from>/icub-grasp/g29/mover:o</from>
+        <to>/g29/model-mover/delta-pose:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/icubSim/cam/left/rgbImage:o</from>
+        <to>/view/left</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/icubSim/cam/left/rgbImage:o</from>
+        <to>/icub-grasp/rgb:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/icubSim/cam/right/rgbImage:o</from>
+        <to>/view/right</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/icubSim/cam/right/rgbImage:o</from>
+        <to>/icub-grasp/r_rgb:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/icubSim/cam/left/depthImage:o</from>
+        <to>/icub-grasp/depth:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/icub-grasp/sq:rpc</from>
+        <to>/find-superquadric/points:rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/steer_joint_angle:o</from>
+        <to>/steer_joint_angle_receiver:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+</application>
